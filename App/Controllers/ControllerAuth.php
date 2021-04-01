@@ -8,8 +8,8 @@ class ControllerAuth extends BasicController
     {
         /*$_SESSION['token'] = null;
 
-        $client_id = 'a0ae2c9ce97e4fb09acfca1fc0c7aef2';
-        $client_secret = 'fd959446bb4a41d894001095dc653468';
+        $client_id = '';
+        $client_secret = '';
 
         $curl = curl_init();
         curl_setopt($curl,CURLOPT_URL, 'https://accounts.spotify.com/api/token' );
