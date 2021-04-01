@@ -1,0 +1,21 @@
+{
+    "name": "wenitalist/spotify",
+    "description": "spotifyshuffle",
+    "authors": [
+        {
+            "name": "kirill",
+            "email": "wenitalist@gmail.com"
+        }
+    ],
+    "require": {
+        "symfony/var-dumper": "^5.2",
+        "ext-pdo": "^7.4",
+        "twig/twig": "^3.3",
+        "ext-curl": "*"
+    },
+	"autoload": {
+        "psr-4": {
+            "App\\": "App/"
+        }
+    }
+}
