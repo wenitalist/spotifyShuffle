@@ -5,15 +5,20 @@ namespace App;
 class Router
 {
     public const massUrl = [
-        "/" => [\App\Controllers\ControllerAuth::class, 'authorization'],
+        "/" => [\App\Controllers\ControllerSpotify::class, 'index'],
+        "/getCode/" => [\App\Controllers\ControllerSpotify::class, 'getCode'],
     ];
 
     public function checkUrl()
     {
-        if(isset(self::massUrl[$_SERVER['REQUEST_URI']]))
+        $url = $_SERVER['REQUEST_URI'];
+        $url = explode('?', $url);
+        $url = $url[0];
+
+        if(isset(self::massUrl[$url]))
         {
-            $controllerClass = self::massUrl[$_SERVER['REQUEST_URI']][0];
-            $method = self::massUrl[$_SERVER['REQUEST_URI']][1];
+            $controllerClass = self::massUrl[$url][0];
+            $method = self::massUrl[$url][1];
             $controller = new $controllerClass();
             echo $controller->$method();
         }

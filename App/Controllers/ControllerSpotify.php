@@ -2,10 +2,33 @@
 
 namespace App\Controllers;
 
-class ControllerAuth extends BasicController
+class ControllerSpotify extends BasicController
 {
-    public function authorization()
+    public function getCode()
     {
+        $url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        $result = parse_url($url);
+        parse_str($result['query'], $output);
+        $_SESSION['code'] = $output['code'];
+        //$_SESSION['time'] = date('l jS \of F Y h:i:s A');
+        header("Location: /");
+    }
+
+    public function index()
+    {
+        return $this->render('index.twig', ['session' => $_SESSION]);
+
+        /*$curl = curl_init();
+        curl_setopt_array( $curl, [
+            CURLOPT_URL => '',
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POSTFIELDS => ['client_id' => 'a0ae2c9ce97e4fb09acfca1fc0c7aef2', 'response_type' => 'code', 'redirect_uri' => 'http://spotify.sshkpp.ru/zxc'],
+        ]);
+        $result = curl_exec($curl);
+
+        echo $result;*/
+
         /*$_SESSION['token'] = null;
 
         $client_id = '';
@@ -23,7 +46,6 @@ class ControllerAuth extends BasicController
         $_SESSION['token'] = $token;
 
         return $this->render('spotify.twig', ['session' => $_SESSION]);*/
-        echo 1;
     }
 
     public function script()
