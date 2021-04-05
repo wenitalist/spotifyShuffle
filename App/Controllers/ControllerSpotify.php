@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 class ControllerSpotify extends BasicController
 {
-    public function getCode()
+    public function getCode() // Тут я получаю код авторизации
     {
         $url = ((!empty($_SERVER['HTTPS'])) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
         $result = parse_url($url);
@@ -17,48 +17,43 @@ class ControllerSpotify extends BasicController
     public function index()
     {
         return $this->render('index.twig', ['session' => $_SESSION]);
-
-        /*$curl = curl_init();
-        curl_setopt_array( $curl, [
-            CURLOPT_URL => '',
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POSTFIELDS => ['client_id' => 'a0ae2c9ce97e4fb09acfca1fc0c7aef2', 'response_type' => 'code', 'redirect_uri' => 'http://spotify.sshkpp.ru/zxc'],
-        ]);
-        $result = curl_exec($curl);
-
-        echo $result;*/
-
-        /*$_SESSION['token'] = null;
-
-        $client_id = '';
-        $client_secret = '';
-
-        $curl = curl_init();
-        curl_setopt($curl,CURLOPT_URL, 'https://accounts.spotify.com/api/token' );
-        curl_setopt($curl,CURLOPT_POST, true );
-        curl_setopt($curl,CURLOPT_RETURNTRANSFER, true );
-        curl_setopt($curl,CURLOPT_POSTFIELDS, 'grant_type=client_credentials' );
-        curl_setopt($curl,CURLOPT_HTTPHEADER, array('Authorization: Basic '.base64_encode($client_id.':'.$client_secret)));
-        $result = curl_exec($curl);
-
-        $token = substr($result, 17, 83);
-        $_SESSION['token'] = $token;
-
-        return $this->render('spotify.twig', ['session' => $_SESSION]);*/
     }
 
-    public function script()
+    public function getToken() // Тут я получаю токен доступа
     {
+        $clientIdSecret = "a0ae2c9ce97e4fb09acfca1fc0c7aef2:fd959446bb4a41d894001095dc653468";
+
         $curl = curl_init();
-        curl_setopt_array( $curl, [
-            CURLOPT_URL => 'https://api.spotify.com/v1/me/episodes',
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://accounts.spotify.com/api/token',
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => array('Authorization: Bearer '.$_SESSION['token']),
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => ['Authorization: Basic ' . base64_encode($clientIdSecret)],
+            CURLOPT_POSTFIELDS => http_build_query([
+                'grant_type' => 'authorization_code',
+                'code' => $_SESSION['code'],
+                'redirect_uri' => 'http://spotify.sshkpp.ru/getCode/',
+            ]),
         ]);
         $result = curl_exec($curl);
+        $response = json_decode($result, true);
+        $_SESSION['accessToken'] = $response['access_token']; // Токен доступа
+        $_SESSION['refreshToken'] = $response['refresh_token']; // Для обновления токена
+        header("Location: /");
+    }
 
-        dump($result);
+    public function getAlbums()
+    {
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.spotify.com/v1/me/tracks',
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $_SESSION['accessToken']],
+        ]);
+        $result = curl_exec($curl);
+        $response = json_decode($result, true);
+        dump($response);
     }
 }

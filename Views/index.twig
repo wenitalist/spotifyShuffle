@@ -10,13 +10,15 @@
     <title>{% block title %}Главная{% endblock %}</title>
 </head>
 <body>
-    <header>
-        <a href="https://accounts.spotify.com/authorize?client_id=a0ae2c9ce97e4fb09acfca1fc0c7aef2&response_type=code&redirect_uri=http%3A%2F%2Fspotify.sshkpp.ru%2FgetCode%2F&scope=user-read-private%20user-read-email&state=34fFs29kd09">zxc</a>
-    </header>
-    <main>
-        {% block table %}
+<header>
+    <a href="https://accounts.spotify.com/authorize?client_id=a0ae2c9ce97e4fb09acfca1fc0c7aef2&response_type=code&redirect_uri=http%3A%2F%2Fspotify.sshkpp.ru%2FgetCode%2F&scope=user-read-private%20user-read-email%20user-library-read&state=34fFs29kd09">Авторизоваться</a>
+    <br>
+    <a href="/getToken/">Получить токен</a>
+</header>
+<main>
+    {% block table %}
 
-        {% endblock %}
-    </main>
+    {% endblock %}
+</main>
 </body>
 </html>
