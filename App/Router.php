@@ -8,7 +8,8 @@ class Router
         "/" => [\App\Controllers\ControllerSpotify::class, 'index'],
         "/getCode/" => [\App\Controllers\ControllerSpotify::class, 'getCode'],
         "/getToken/" => [\App\Controllers\ControllerSpotify::class, 'getToken'],
-        "/getAlbums/" => [\App\Controllers\ControllerSpotify::class, 'getAlbums'],
+        "/shuffle/" => [\App\Controllers\ControllerSpotify::class, 'getTracks'],
+        "/add/" => [\App\Controllers\ControllerSpotify::class, 'addTracks'],
     ];
 
     public function checkUrl()

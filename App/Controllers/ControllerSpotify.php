@@ -12,6 +12,7 @@ class ControllerSpotify extends BasicController
         $_SESSION['code'] = $output['code'];
         //$_SESSION['time'] = date('l jS \of F Y h:i:s A');
         header("Location: /");
+        exit();
     }
 
     public function index()
@@ -41,19 +42,42 @@ class ControllerSpotify extends BasicController
         $_SESSION['accessToken'] = $response['access_token']; // Токен доступа
         $_SESSION['refreshToken'] = $response['refresh_token']; // Для обновления токена
         header("Location: /");
+        exit();
     }
 
-    public function getAlbums()
+    public function getTracks()
     {
         $curl = curl_init();
         curl_setopt_array($curl, [
-            CURLOPT_URL => 'https://api.spotify.com/v1/me/tracks',
+            CURLOPT_URL => 'https://api.spotify.com/v1/me/tracks'.'?'.'offset=0'.'&'.'limit=50',
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $_SESSION['accessToken']],
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $_SESSION['accessToken'],
+            ],
         ]);
         $result = curl_exec($curl);
         $response = json_decode($result, true);
+        //shuffle($response['items']);
         dump($response);
+    }
+
+    public function addTracks()
+    {
+        $curl = curl_init();                // 79i617mqpQLwUs3WTokYX9      -- benedixhion toxin -- пытаюсь добавить
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.spotify.com/v1/me/tracks?ids=79i617mqpQLwUs3WTokYX9',
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_PUT => true,
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $_SESSION['accessToken'],
+                'Accept: application/json',
+                'Content-Type: application/json',
+            ],
+        ]);
+        $result = curl_exec($curl);
+        header("Location: /");
+        exit();
     }
 }
