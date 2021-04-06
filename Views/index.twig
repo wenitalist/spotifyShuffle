@@ -11,10 +11,11 @@
 </head>
 <body>
 <header>
-    <a href="https://accounts.spotify.com/authorize?client_id=a0ae2c9ce97e4fb09acfca1fc0c7aef2&response_type=code&redirect_uri=http%3A%2F%2Fspotify.sshkpp.ru%2FgetCode%2F&scope=user-read-private%20user-read-email%20user-library-read%20user-library-modify&state=34fFs29kd09">Авторизоваться</a>
-    <br><a href="/getToken/">Получить токен</a>
-    <br><a href="/shuffle/">Перемешать треки</a>
-    <br><a href="/add/">Добавить треки</a>
+    <div style="text-align: center; margin-top: 15%; background-color: #d4d4d4; width: 30%; margin-left: auto; margin-right: auto">
+        <a href="https://accounts.spotify.com/authorize?client_id=a0ae2c9ce97e4fb09acfca1fc0c7aef2&response_type=code&redirect_uri=http%3A%2F%2Fspotify.sshkpp.ru%2FgetCode%2F&scope=user-read-private%20user-read-email%20user-library-read%20user-library-modify&state=34fFs29kd09">Авторизоваться</a>
+        <br>
+        <a href="/shuffle/">Перемешать треки</a>
+    </div>
 </header>
 <main>
     {% block table %}

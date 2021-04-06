@@ -7,9 +7,7 @@ class Router
     public const massUrl = [
         "/" => [\App\Controllers\ControllerSpotify::class, 'index'],
         "/getCode/" => [\App\Controllers\ControllerSpotify::class, 'getCode'],
-        "/getToken/" => [\App\Controllers\ControllerSpotify::class, 'getToken'],
-        "/shuffle/" => [\App\Controllers\ControllerSpotify::class, 'getTracks'],
-        "/add/" => [\App\Controllers\ControllerSpotify::class, 'addTracks'],
+        "/shuffle/" => [\App\Controllers\ControllerSpotify::class, 'shuffleTracks'],
     ];
 
     public function checkUrl()

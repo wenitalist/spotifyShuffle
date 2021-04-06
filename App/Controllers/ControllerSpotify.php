@@ -10,7 +10,7 @@ class ControllerSpotify extends BasicController
         $result = parse_url($url);
         parse_str($result['query'], $output);
         $_SESSION['code'] = $output['code'];
-        //$_SESSION['time'] = date('l jS \of F Y h:i:s A');
+        self::getToken();
         header("Location: /");
         exit();
     }
@@ -41,43 +41,104 @@ class ControllerSpotify extends BasicController
         $response = json_decode($result, true);
         $_SESSION['accessToken'] = $response['access_token']; // Токен доступа
         $_SESSION['refreshToken'] = $response['refresh_token']; // Для обновления токена
-        header("Location: /");
-        exit();
+    }
+    public function getTracks()
+    {
+        $offset = 0;
+        $mass = [];
+
+        $response = json_decode(self::getTotal($offset), true);
+        $total = $response['total'];
+
+        while (count($mass) < $total)
+        {
+            $id = 0;
+            while ($id < count($response['items']))
+            {
+                $mass[] = [
+                    'artists' => $response['items'][$id]['track']['artists'][0]['name'],
+                    'name' => $response['items'][$id]['track']['name'],
+                    'id' => $response['items'][$id]['track']['id'],
+                ];
+                $id++;
+            }
+            $offset += 50;
+            $response = json_decode(self::getTotal($offset), true);
+        }
+
+        /*$fp = fopen("list.json", "a"); // Создание json файла со всеми треками
+        $json = json_encode($mass, JSON_PRETTY_PRINT);
+        fwrite($fp, $json);
+        fclose($fp);*/
+
+        return $mass;
     }
 
-    public function getTracks()
+    public function shuffleTracks() // Тут я заношу все треки в массив
+    {
+        $mass = self::getTracks();
+        self::deleteTracks($mass);
+        shuffle($mass);
+        self::addTracks($mass);
+        echo("<h1>Готово</h1>");
+    }
+
+    public function getTotal(int $offset) // Запрос возвращающий массив с треками
     {
         $curl = curl_init();
         curl_setopt_array($curl, [
-            CURLOPT_URL => 'https://api.spotify.com/v1/me/tracks'.'?'.'offset=0'.'&'.'limit=50',
+            CURLOPT_URL => 'https://api.spotify.com/v1/me/tracks' . '?' . 'offset=' . $offset . '&' . 'limit=50',
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => [
                 'Authorization: Bearer ' . $_SESSION['accessToken'],
             ],
         ]);
-        $result = curl_exec($curl);
-        $response = json_decode($result, true);
-        //shuffle($response['items']);
-        dump($response);
+        return $result = curl_exec($curl);
     }
 
-    public function addTracks()
+    public function deleteTracks(array $mass = [])
     {
-        $curl = curl_init();                // 79i617mqpQLwUs3WTokYX9      -- benedixhion toxin -- пытаюсь добавить
+        $query = 'https://api.spotify.com/v1/me/tracks?ids=';
+
+        foreach($mass as $row) // Цикл для удаления всех любимых треков
+        {
+            $query .= $row['id'] . ',';
+        }
+
+        $curl = curl_init();
         curl_setopt_array($curl, [
-            CURLOPT_URL => 'https://api.spotify.com/v1/me/tracks?ids=79i617mqpQLwUs3WTokYX9',
+            CURLOPT_URL => $query,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_PUT => true,
+            CURLOPT_CUSTOMREQUEST => 'DELETE',
             CURLOPT_HTTPHEADER => [
                 'Authorization: Bearer ' . $_SESSION['accessToken'],
-                'Accept: application/json',
-                'Content-Type: application/json',
             ],
         ]);
-        $result = curl_exec($curl);
-        header("Location: /");
-        exit();
+        curl_exec($curl);
+    }
+
+    public function addTracks(array $mass = []) // Тут я добавляю треки в "Любимую музыку"
+    {
+        foreach($mass as $row) // Цикл для добавления треков
+        {
+            $query = 'https://api.spotify.com/v1/me/tracks?ids=';
+            $query .= $row['id'];
+
+            $curl = curl_init();
+            curl_setopt_array($curl, [
+                CURLOPT_URL => $query,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_PUT => true,
+                CURLOPT_HTTPHEADER => [
+                    'Authorization: Bearer ' . $_SESSION['accessToken'],
+                    'Accept: application/json',
+                    'Content-Type: application/json',
+                ],
+            ]);
+            curl_exec($curl);
+        }
     }
 }
