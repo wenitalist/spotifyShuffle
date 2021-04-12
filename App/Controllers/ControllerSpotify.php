@@ -42,6 +42,7 @@ class ControllerSpotify extends BasicController
         $_SESSION['accessToken'] = $response['access_token']; // Токен доступа
         $_SESSION['refreshToken'] = $response['refresh_token']; // Для обновления токена
     }
+
     public function getTracks()
     {
         $offset = 0;
@@ -50,11 +51,9 @@ class ControllerSpotify extends BasicController
         $response = json_decode(self::getTotal($offset), true);
         $total = $response['total'];
 
-        while (count($mass) < $total)
-        {
+        while (count($mass) < $total) {
             $id = 0;
-            while ($id < count($response['items']))
-            {
+            while ($id < count($response['items'])) {
                 $mass[] = [
                     'artists' => $response['items'][$id]['track']['artists'][0]['name'],
                     'name' => $response['items'][$id]['track']['name'],
@@ -66,20 +65,33 @@ class ControllerSpotify extends BasicController
             $response = json_decode(self::getTotal($offset), true);
         }
 
-        /*$fp = fopen("list.json", "a"); // Создание json файла со всеми треками
-        $json = json_encode($mass, JSON_PRETTY_PRINT);
-        fwrite($fp, $json);
-        fclose($fp);*/
+        shuffle($mass);
+
+        if (file_exists("list.json")) // Создание json файла со всеми треками
+        {
+            unlink("list.json"); // Удаляет файл
+
+            $fp = fopen("list.json", "a");
+            $json = json_encode($mass, JSON_PRETTY_PRINT);
+            fwrite($fp, $json);
+            fclose($fp);
+        } else {
+            $fp = fopen("list.json", "a");
+            $json = json_encode($mass, JSON_PRETTY_PRINT);
+            fwrite($fp, $json);
+            fclose($fp);
+        }
 
         return $mass;
     }
 
-    public function shuffleTracks() // Тут я заношу все треки в массив
+    public function shuffleTracks()
     {
-        $mass = self::getTracks();
-        self::deleteTracks($mass);
-        shuffle($mass);
-        self::addTracks($mass);
+        self::getTracks();
+        if (file_exists("list.json")) {
+            self::deleteTracks();
+        }
+
         echo("<h1>Готово</h1>");
     }
 
@@ -97,31 +109,62 @@ class ControllerSpotify extends BasicController
         return $result = curl_exec($curl);
     }
 
-    public function deleteTracks(array $mass = [])
+    public function deleteTracks() // Тут я удаляю все любимые треки
     {
-        $query = 'https://api.spotify.com/v1/me/tracks?ids=';
+        $json = file_get_contents("list.json");
+        $mass = json_decode($json, TRUE);
 
-        foreach($mass as $row) // Цикл для удаления всех любимых треков
+        $query = 'https://api.spotify.com/v1/me/tracks?ids=';
+        $counter = 0;
+        $id = 0;
+        $count = count($mass);
+
+        foreach ($mass as $row) // Цикл для удаления всех любимых треков по 50 за раз
         {
             $query .= $row['id'] . ',';
+            $id++;
+
+            if ($id == 50)
+            {
+                $curl = curl_init();
+                curl_setopt_array($curl, [
+                    CURLOPT_URL => $query,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_CUSTOMREQUEST => 'DELETE',
+                    CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $_SESSION['accessToken'],],
+                ]);
+                curl_exec($curl);
+                $id = 0;
+                $query = 'https://api.spotify.com/v1/me/tracks?ids=';
+            }
+            $counter++;
+        }
+        if ($count == $counter and $query != 'https://api.spotify.com/v1/me/tracks?ids=') // Если осталось удалить треков меньше 50
+        {
+            $curl = curl_init();
+            curl_setopt_array($curl, [
+                CURLOPT_URL => $query,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CUSTOMREQUEST => 'DELETE',
+                CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $_SESSION['accessToken'],],
+            ]);
+            curl_exec($curl);
+            $query = 'https://api.spotify.com/v1/me/tracks?ids=';
         }
 
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_URL => $query,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_CUSTOMREQUEST => 'DELETE',
-            CURLOPT_HTTPHEADER => [
-                'Authorization: Bearer ' . $_SESSION['accessToken'],
-            ],
-        ]);
-        curl_exec($curl);
+        self::addTracks(); // После удаления всех треков, запускается функция добавления перемешанных треков
     }
 
-    public function addTracks(array $mass = []) // Тут я добавляю треки в "Любимую музыку"
+    public function addTracks() // Тут я добавляю треки в "Любимую музыку"
     {
-        foreach($mass as $row) // Цикл для добавления треков
+        //set_time_limit ( 1500 );
+
+        $json = file_get_contents("list.json");
+        $mass = json_decode($json, TRUE);
+
+        foreach ($mass as $row) // Цикл для добавления треков
         {
             $query = 'https://api.spotify.com/v1/me/tracks?ids=';
             $query .= $row['id'];
@@ -139,6 +182,7 @@ class ControllerSpotify extends BasicController
                 ],
             ]);
             curl_exec($curl);
+            sleep(1);
         }
     }
 }
